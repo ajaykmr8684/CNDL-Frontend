@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 import { 
   Container, Typography, Paper, Grid, Button, Box, Alert, Fade, Grow, Zoom,
   Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel,
@@ -19,6 +17,9 @@ import PlayerCard from '../components/PlayerCard';
 import PageHeader from '../components/PageHeader';
 import PlayerManagementDialog from '../components/PlayerManagementDialog';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 
 function SoldView() {
   const { auctionState, teams, sellPlayer, markUnsold } = useAuction();

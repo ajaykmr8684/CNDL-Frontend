@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 import {
   Container, Typography, Paper, Box,
   Snackbar, Alert, Fade, Button, Grid, Chip
@@ -10,6 +8,9 @@ import LocalAtmIcon from '@mui/icons-material/LocalAtm';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import PlayerCard from '../components/PlayerCard';
 import PageHeader from '../components/PageHeader';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 
 function BidView() {
   const { auctionState, teams, placeBid, loading } = useAuction();
