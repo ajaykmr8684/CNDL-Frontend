@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
   FormControl, InputLabel, Select, MenuItem, Grid, Typography, Box,
@@ -70,7 +72,7 @@ const PlayerManagementDialog = ({ open, onClose, teams, onPlayerUpdate }) => {
   const fetchPlayers = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/players');
+      const response = await fetch(`${API_URL}/api/admin/players`);
       if (response.ok) {
         const data = await response.json();
         setPlayers(data);
