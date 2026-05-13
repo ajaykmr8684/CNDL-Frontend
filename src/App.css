@@ -1,0 +1,9 @@
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #eef2ff 0%, #f8fafc 45%, #f0f9ff 100%);
+}
+
+.content-container {
+  min-height: calc(100vh - 64px);
+  animation: fadeInUp 0.35s ease-out;
+}
