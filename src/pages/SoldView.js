@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 import { 
   Container, Typography, Paper, Grid, Button, Box, Alert, Fade, Grow, Zoom,
   Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel,
@@ -65,7 +67,7 @@ const [isPlayerManagementOpen, setIsPlayerManagementOpen] = useState(false);
 
   const checkIpAccess = async () => {
     try {
-      const response = await fetch('/api/check-ip-access');
+      const response = await fetch(`${API_URL}/api/check-ip-access`);
       const data = await response.json();
       setIsAuthorized(data.allowed);
     } catch (error) {
@@ -93,7 +95,7 @@ const handlePlayerUpdate = () => {
 
   const fetchPlayerData = async () => {
     try {
-      const response = await fetch('/api/auction/export-players');
+      const response = await fetch(`${API_URL}/api/auction/export-players`);
       if (response.ok) {
         const data = await response.json();
         setAllPlayers(data);
@@ -159,7 +161,7 @@ const handlePlayerUpdate = () => {
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      const response = await fetch('/api/auction/export-players');
+      const response = await fetch(`${API_URL}/api/auction/export-players`);
       if (!response.ok) {
         throw new Error('Failed to fetch player data');
       }
@@ -224,7 +226,7 @@ const handlePlayerUpdate = () => {
     setIsUpdating(true);
   
     try {
-      const response = await fetch('/api/auction/edit-bid', {
+      const response = await fetch(`${API_URL}/api/auction/edit-bid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -264,7 +266,7 @@ const handlePlayerUpdate = () => {
     setIsStartingReAuction(true);
     
     try {
-      const response = await fetch('/api/auction/re-auction', {
+      const response = await fetch(`${API_URL}/api/auction/re-auction`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
