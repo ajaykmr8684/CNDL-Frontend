@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 import {
   Container, Typography, Paper, Box,
   Snackbar, Alert, Fade, Button, Grid, Chip
@@ -66,7 +68,7 @@ function BidView() {
     if (!currentPlayer) return;
     
     try {
-      const response = await fetch('/api/auction/current-bid-amount');
+      const response = await fetch(`${API_URL}/api/auction/current-bid-amount`);
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
       
@@ -109,7 +111,7 @@ function BidView() {
 
     try {
       // Optimized API call - send minimal data
-      const response = await fetch('/api/auction/bid', {
+      const response = await fetch(`${API_URL}/api/auction/bid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
