@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
   FormControl, InputLabel, Select, MenuItem, Grid, Typography, Box,
@@ -19,6 +17,9 @@ import {
   AttachMoney as MoneyIcon,
   Photo as PhotoIcon
 } from '@mui/icons-material';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 
 const PlayerManagementDialog = ({ open, onClose, teams, onPlayerUpdate }) => {
   const [players, setPlayers] = useState([]);
