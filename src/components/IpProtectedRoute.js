@@ -7,6 +7,8 @@ import { Box, CircularProgress } from '@mui/material';
  * A component that restricts access to routes based on IP address
  * Children components are only rendered if the user's IP is in the allowlist
  */
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 const IpProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAllowed, setIsAllowed] = useState(false);
@@ -15,7 +17,7 @@ const IpProtectedRoute = ({ children }) => {
     const checkIpAccess = async () => {
       try {
         // Call your backend endpoint that checks IP
-        const response = await fetch('/api/check-ip-access');
+        const response = await fetch(`${API_URL}/api/check-ip-access`);
         const data = await response.json();
         setIsAllowed(data.allowed);
         setLoading(false);
