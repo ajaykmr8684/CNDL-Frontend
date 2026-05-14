@@ -51,8 +51,8 @@ function LoginPage({ onSuccess }) {
       <Paper
         elevation={0}
         sx={{
-          width: 380,
-          p: 4,
+          width: { xs: '92%', sm: 380 },
+          p: { xs: 3, sm: 4 },
           borderRadius: 3,
           border: '1px solid rgba(0,0,0,0.08)',
           boxShadow: '0 20px 40px rgba(30,64,175,0.1)',
