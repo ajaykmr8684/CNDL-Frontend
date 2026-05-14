@@ -20,7 +20,6 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
-
 function SoldView() {
   const { auctionState, teams, sellPlayer, markUnsold } = useAuction();
   const { currentPlayer, highestBid } = auctionState;
@@ -306,13 +305,13 @@ const handlePlayerUpdate = () => {
     <Container maxWidth="lg" sx={{ mb: 6 }}>
       <Fade in timeout={800}>
         <div>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1, mb: 3 }}>
             <PageHeader 
               title="Admin Control" 
               subtitle="Manage the auction process" 
               icon={<AdminPanelSettingsIcon fontSize="large" />}
             />
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {isAuthorized && (
                 
                 <>
