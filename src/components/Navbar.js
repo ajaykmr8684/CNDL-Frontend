@@ -108,7 +108,7 @@ function Navbar() {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, px: 2, py: 2 }}>
           <GavelIcon sx={{ color: '#1e40af' }} />
-          <Typography fontWeight={700} sx={{ color: '#1e40af' }}>CNDL</Typography>
+          <Typography fontWeight={700} sx={{ color: '#1e40af' }}>Cobra League</Typography>
         </Box>
         <Divider />
         <List>
