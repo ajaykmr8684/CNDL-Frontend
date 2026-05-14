@@ -25,8 +25,8 @@ function BidView() {
   const [isPlacingBid, setIsPlacingBid] = useState(false);
 
   // Constants for budget calculations
-  const MIN_PLAYERS_REQUIRED = 11;
-  const MIN_PLAYER_BASE_PRICE = 20000000; // 2 Cr
+  const MIN_PLAYERS_REQUIRED = 14;
+  const MIN_PLAYER_BASE_PRICE = 100000; 
   const MAX_TEAM_BUDGET = 400000000; // 40 Cr
 
   // Memoized currency formatter
