@@ -1,513 +1,313 @@
 import React, { useState } from 'react';
-import { Box, Grid, Typography, Card, Avatar, Chip, ToggleButtonGroup, ToggleButton, Divider, Badge } from '@mui/material';
+import { Box, Typography, Card, Avatar, Chip, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import ViewStreamIcon from '@mui/icons-material/ViewStream';
 import { useAuction } from '../context/AuctionContext';
 import TeamTable from '../components/TeamTable';
 import ToastNotification from '../components/ToastNotification';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GavelIcon from '@mui/icons-material/Gavel';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
 import SportsHandballIcon from '@mui/icons-material/SportsHandball';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ViewStreamIcon from '@mui/icons-material/ViewStream';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import PersonIcon from '@mui/icons-material/Person';
-import FlagIcon from '@mui/icons-material/Flag';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
-// Enhanced CompactPlayerCard
-function CompactPlayerCard({ player, title, primaryColor, highestBid, teams, isNextPlayer = false }) {
-  if (!player) return (
-    <Box sx={{
-      p: 1.5,
-      backgroundColor: 'rgba(241, 245, 249, 0.7)',
-      borderRadius: 2,
-      border: '1px dashed rgba(0, 0, 0, 0.1)',
-      textAlign: 'center',
-      height: '100%',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-    }}>
-      <Typography variant="body2" color="text.secondary">
-        {title} not available
-      </Typography>
-    </Box>
-  );
+const formatToINR = (amount) => {
+  if (amount === null || amount === undefined) return '—';
+  if (amount >= 1_00_00_000) return `${(amount / 1_00_00_000).toFixed(2)} Cr`;
+  if (amount >= 1_00_000) return `${(amount / 1_00_000).toFixed(2)} L`;
+  return `₹${amount.toLocaleString('en-IN')}`;
+};
 
-  const formatToINR = (amount) => {
-    if (amount === null) return "R";
-    if (amount >= 1_00_00_000) return `${(amount / 1_00_00_000).toFixed(2)} Cr`;
-    if (amount >= 1_00_000) return `${(amount / 1_00_000).toFixed(2)} L`;
-    return amount.toString();
-  };
-  
-  // Get tier colors
-  const getTierColor = (tier) => {
-    switch(tier) {
-      case 1: return { bg: 'rgba(16, 185, 129, 0.1)', text: '#047857', border: 'rgba(16, 185, 129, 0.3)' };
-      case 2: return { bg: 'rgba(245, 158, 11, 0.1)', text: '#b45309', border: 'rgba(245, 158, 11, 0.3)' };
-      case 3: return { bg: 'rgba(239, 68, 68, 0.1)', text: '#b91c1c', border: 'rgba(239, 68, 68, 0.3)' };
-      default: return { bg: 'rgba(75, 85, 99, 0.1)', text: '#4b5563', border: 'rgba(75, 85, 99, 0.3)' };
-    }
-  };
-  
-  const tierColor = getTierColor(player.tier);
+const TIER_STYLE = {
+  1: { bg: 'rgba(16,185,129,0.12)', text: '#065f46', border: 'rgba(16,185,129,0.35)', label: 'Marquee' },
+  2: { bg: 'rgba(245,158,11,0.12)', text: '#92400e', border: 'rgba(245,158,11,0.35)', label: 'Tier 1' },
+  3: { bg: 'rgba(239,68,68,0.12)',  text: '#991b1b', border: 'rgba(239,68,68,0.35)',  label: 'Tier 2' },
+};
 
-  // Mock nationality (since it's not in the original data)
-  const nationality = "Indian"; // Default value, replace with actual data if available
-  
-  // Parse batting and bowling stats
-  const parseBattingStats = (battingStat) => {
-    if (!battingStat) return { runs: '-', average: '-', strikeRate: '-' };
-    const parts = battingStat.split(',');
-    // If it looks like a numeric stat string (has numbers), parse it
-    if (parts.length > 1 || !isNaN(parts[0])) {
-      return {
-        runs: parts[0] || '-',
-        average: parts[1] || '-',
-        strikeRate: parts[2] || '-'
-      };
-    }
-    // Otherwise it's a style string like "Right-Handed" — don't parse as stats
-    return { runs: null, average: null, strikeRate: null };
-  };
-  
-  const parseBowlingStats = (bowlingStat) => {
-    if (!bowlingStat || bowlingStat === 'NA') return { wickets: '-', economy: '-', strikeRate: '-' };
-    const parts = bowlingStat.split(',');
-    // If it looks like a numeric stat string (has numbers), parse it
-    if (parts.length > 1 || !isNaN(parts[0])) {
-      return {
-        wickets: parts[0] || '-',
-        economy: parts[1] || '-',
-        strikeRate: parts[2] || '-'
-      };
-    }
-    // Otherwise it's a style string like "Right-Arm-Medium" — don't parse as stats
-    return { wickets: null, economy: null, strikeRate: null };
-  };
-  
-  const battingStats = parseBattingStats(player.battingStat);
-  const bowlingStats = parseBowlingStats(player.bowlingStat);
+const PLAYER_TYPE_COLOR = {
+  'batsman':       '#f59e0b',
+  'bowler':        '#3b82f6',
+  'all-rounder':   '#8b5cf6',
+  'wicket-keeper': '#ef4444',
+};
+
+function parseStat(stat) {
+  if (!stat || stat === 'NA') return null;
+  const parts = stat.split(',');
+  if (parts.length > 1 || !isNaN(parts[0])) return parts;
+  return stat;
+}
+
+function CurrentPlayerCard({ player, highestBid, teams }) {
+  if (!player) {
+    return (
+      <Card elevation={3} sx={{ height: '100%', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed rgba(0,0,0,0.1)' }}>
+        <Box sx={{ textAlign: 'center', p: 3 }}>
+          <GavelIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+          <Typography variant="body1" color="text.secondary">Auction not started or completed</Typography>
+        </Box>
+      </Card>
+    );
+  }
+
+  const tier = TIER_STYLE[player.tier] || TIER_STYLE[3];
+  const typeColor = PLAYER_TYPE_COLOR[player.playerType?.toLowerCase()] || '#6b7280';
+  const battingStat = parseStat(player.battingStat);
+  const bowlingStat = parseStat(player.bowlingStat);
+  const bidTeam = teams?.find(t => t.id === highestBid?.teamId);
 
   return (
-    <Card elevation={2} sx={{
+    <Card elevation={4} sx={{
       height: '100%',
-      borderRadius: 2,
+      borderRadius: 3,
       overflow: 'hidden',
-      borderLeft: '5px solid',
-      borderColor: primaryColor,
-      position: 'relative',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      border: '1px solid rgba(30,64,175,0.1)',
+      boxShadow: '0 8px 32px rgba(30,64,175,0.12)',
     }}>
-      {/* Card Header - Now more compact */}
+      {/* Header */}
       <Box sx={{
-        px: 1.5,
-        py: 0.6, // Reduced padding
-        borderBottom: '1px solid rgba(0,0,0,0.05)',
-        background: primaryColor === 'primary.main' ? 'linear-gradient(to right, #e0f2fe, #f0f9ff)' : 'linear-gradient(to right, #fef2f2, #fff1f2)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        px: 2, py: 1,
+        background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 60%, #2563eb 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          {title === "Current Player" ? (
-            <GavelIcon sx={{ 
-              fontSize: '0.8rem', // Smaller icon
-              color: '#0369a1',
-              animation: 'pulse 1.5s infinite'
-            }} />
-          ) : (
-            <AccessTimeIcon sx={{ fontSize: '0.8rem', color: '#be123c' }} />
-          )}
-          <Typography variant="subtitle2" sx={{
-            fontWeight: 600,
-            color: title === "Current Player" ? '#0369a1' : '#be123c',
-            fontSize: '0.7rem', // Smaller text
-            letterSpacing: '0.01em'
-          }}>
-            {title.toUpperCase()}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FiberManualRecordIcon sx={{ fontSize: '0.7rem', color: '#4ade80', animation: 'livePulse 1.2s ease-in-out infinite' }} />
+          <GavelIcon sx={{ fontSize: '1rem', color: 'rgba(255,255,255,0.9)' }} />
+          <Typography sx={{ fontWeight: 700, color: 'white', fontSize: '0.8rem', letterSpacing: '0.06em' }}>
+            ON THE BLOCK
           </Typography>
         </Box>
-        
-        {/* Moved Class tier badge here */}
         <Chip
-          label={`Class ${player.tier}`}
+          icon={<EmojiEventsIcon style={{ fontSize: '0.7rem', color: tier.text }} />}
+          label={tier.label}
           size="small"
-          icon={<EmojiEventsIcon style={{ fontSize: '0.65rem' }} />}
-          sx={{
-            height: 18, // Smaller height
-            fontSize: '0.6rem', // Smaller font
-            backgroundColor: tierColor.bg,
-            color: tierColor.text,
-            fontWeight: 600,
-            border: `1px solid ${tierColor.border}`,
-            '& .MuiChip-icon': {
-              color: tierColor.text
-            }
-          }}
+          sx={{ height: 20, fontSize: '0.6rem', backgroundColor: tier.bg, color: tier.text, border: `1px solid ${tier.border}`, fontWeight: 700 }}
         />
       </Box>
 
-      {/* Card Body */}
-      <Box sx={{
-        display: 'flex',
-        p: 0,
-        flex: 1
-      }}>
-        {/* Player Photo Column - Adjusted sizes */}
-        <Box sx={{ 
-          width: isNextPlayer ? '35%' : '60%', // Reduced width for current player 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          background: 'rgba(249, 250, 251, 0.8)',
-          borderRight: '1px solid rgba(0,0,0,0.03)'
+      {/* Body */}
+      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Photo + name */}
+        <Box sx={{
+          width: { xs: '38%', sm: '40%' },
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          background: 'linear-gradient(160deg, #f8fafc 0%, #eff6ff 100%)',
+          borderRight: '1px solid rgba(0,0,0,0.05)',
+          p: { xs: 1, sm: 1.5 },
+          gap: 0.8,
         }}>
           <Avatar
             src={player.photoUrl || ''}
             alt={player.name}
+            variant="rounded"
             sx={{
-              width: isNextPlayer ? 120 : 280, // Significantly reduced sizes
-              height: isNextPlayer ? 120 : 280, // Significantly reduced sizes
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              width: { xs: 88, sm: 120, md: 150, lg: 190 },
+              height: { xs: 88, sm: 120, md: 150, lg: 190 },
+              borderRadius: 2,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
               border: '3px solid white',
-              backgroundColor: 'rgba(0,0,0,0.04)',
-              mb: 1
+              bgcolor: '#e0e7ff',
+              fontSize: { xs: '1.6rem', md: '2.5rem' },
+              fontWeight: 700,
+              color: '#3730a3',
             }}
           >
-            {!player.photoUrl && player.name.split(' ').map(n => n[0]).join('')}
+            {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
           </Avatar>
-          
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700,
-            fontSize: isNextPlayer ? '0.8rem' : '0.9rem', // Smaller text
+
+          <Typography sx={{
+            fontWeight: 800,
+            fontSize: { xs: '0.75rem', sm: '0.9rem', md: '1rem' },
             textAlign: 'center',
-            px: 1,
-            color: '#111827'
+            color: '#0f172a',
+            lineHeight: 1.2,
+            px: 0.5,
           }}>
             {player.name}
           </Typography>
-          
-          <Box sx={{ 
-  display: 'flex', 
-  alignItems: 'center', 
-  gap: 0.5, 
-  mt: 0.2 // Reduced margin
-}}>
-  <img 
-    src="/india-flag.svg" // Adjust filename if needed
-    alt="Indian Flag" 
-    style={{ 
-      width: '16px', 
-      height: 'auto',
-      verticalAlign: 'middle'
-    }} 
-  />
-  <Typography variant="caption" sx={{ 
-    color: 'text.secondary',
-    fontWeight: 500,
-    fontSize: '0.65rem' // Smaller font
-  }}>
-    {nationality}
-  </Typography>
-</Box>
-          
-          <Chip
-            label={player.playerType}
-            size="small"
-            sx={{
-              mt: 0.8, // Reduced margin
-              height: 20, // Smaller height
-              fontSize: '0.65rem', // Smaller font
-              backgroundColor: 'rgba(0,0,0,0.05)',
-              fontWeight: 600,
-              color: '#4b5563'
-            }}
-          />
-          
-          {!isNextPlayer && player.lastYearTeam && (
+
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'center' }}>
             <Chip
-              label={`Last Year: ${player.lastYearTeam}`}
+              label={player.playerType}
               size="small"
               sx={{
-                mt: 0.8, // Reduced margin
-                height: 18, // Smaller height
-                fontSize: '0.6rem', // Smaller font
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                color: '#4f46e5',
-                fontWeight: 500,
-                border: '1px solid rgba(79, 70, 229, 0.2)'
+                height: 18, fontSize: '0.6rem', fontWeight: 700,
+                backgroundColor: `${typeColor}22`, color: typeColor,
+                border: `1px solid ${typeColor}44`,
               }}
             />
-          )}
+            {player.lastYearTeam && (
+              <Chip
+                icon={<AccessTimeIcon style={{ fontSize: '0.55rem' }} />}
+                label={player.lastYearTeam}
+                size="small"
+                sx={{ height: 18, fontSize: '0.6rem', backgroundColor: 'rgba(79,70,229,0.08)', color: '#4f46e5', border: '1px solid rgba(79,70,229,0.2)' }}
+              />
+            )}
+          </Box>
         </Box>
-        
-        {/* Player Details Column - Adjusted sizes */}
-        <Box sx={{ 
-          width: isNextPlayer ? '65%' : '60%', // Increased width for better proportion
-          p: 1, // Reduced padding
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
-          {/* Stats Section - Simplified for Next Player */}
-          {(!isNextPlayer || (isNextPlayer && (player.battingStat || player.bowlingStat))) && (
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="subtitle2" sx={{ 
-                color: 'text.secondary',
-                fontSize: '0.7rem', // Smaller font
-                mb: 0.5, // Reduced margin
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.03em'
-              }}>
-                Player Stats
-              </Typography>
-              
-              <Grid container spacing={0.8}> {/* Reduced spacing */}
-                {player.battingStat && (
-                  <Grid item xs={6}>
-                    <Box sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      p: 0.7, // Reduced padding
-                      backgroundColor: 'rgba(37, 99, 235, 0.08)',
-                      borderRadius: 1,
-                      border: '1px solid rgba(37, 99, 235, 0.15)'
-                    }}>
-                      <Typography variant="caption" sx={{ 
-                        fontSize: '0.6rem', // Smaller font
-                        color: 'text.secondary',
-                        mb: 0.2 // Reduced margin
-                      }}>
-                        Batting
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <SportsCricketIcon sx={{ fontSize: '0.8rem', color: '#2563eb' }} />
-                        <Typography sx={{ 
-                          fontSize: '0.7rem', // Smaller font
-                          fontWeight: 700, 
-                          color: '#2563eb' 
-                        }}>
-                          {player.battingStat}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Grid>
+
+        {/* Details */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: { xs: 1, sm: 1.5 }, gap: 0.8, overflow: 'hidden' }}>
+
+          {/* Base Price */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1, py: 0.5, borderRadius: 1, backgroundColor: 'rgba(0,0,0,0.03)' }}>
+            <Typography sx={{ fontSize: '0.6rem', color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase' }}>Base Price</Typography>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 800, color: '#1e40af' }}>{formatToINR(player.basePrice)}</Typography>
+          </Box>
+
+          {/* Batting */}
+          {battingStat && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, px: 1, py: 0.5, borderRadius: 1, backgroundColor: 'rgba(37,99,235,0.06)', border: '1px solid rgba(37,99,235,0.12)' }}>
+              <SportsCricketIcon sx={{ fontSize: '0.85rem', color: '#2563eb', flexShrink: 0 }} />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase' }}>Batting</Typography>
+                {Array.isArray(battingStat) ? (
+                  <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: '#1d4ed8' }}>
+                    {battingStat[0]} runs · {battingStat[1]} avg · {battingStat[2]} SR
+                  </Typography>
+                ) : (
+                  <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#1d4ed8' }}>{battingStat}</Typography>
                 )}
-                
-                {player.bowlingStat && (
-                  <Grid item xs={6}>
-                    <Box sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      p: 0.7, // Reduced padding
-                      backgroundColor: 'rgba(139, 92, 246, 0.08)',
-                      borderRadius: 1,
-                      border: '1px solid rgba(139, 92, 246, 0.15)'
-                    }}>
-                      <Typography variant="caption" sx={{ 
-                        fontSize: '0.6rem', // Smaller font
-                        color: 'text.secondary',
-                        mb: 0.2 // Reduced margin
-                      }}>
-                        Bowling
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <SportsHandballIcon sx={{ fontSize: '0.8rem', color: '#8b5cf6' }} />
-                        <Typography sx={{ 
-                          fontSize: '0.7rem', // Smaller font
-                          fontWeight: 700, 
-                          color: '#8b5cf6' 
-                        }}>
-                          {player.bowlingStat}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
+              </Box>
             </Box>
           )}
-          
-          {/* Additional Player Info - Reduced for Next Player */}
-          <Box sx={{ mb: 0.8 }}> {/* Reduced margin */}
-            <Typography variant="subtitle2" sx={{ 
-              color: 'text.secondary',
-              fontSize: '0.7rem', // Smaller font
-              mb: 0.5, // Reduced margin
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.03em'
-            }}>
-              Details
-            </Typography>
-            
-            <Grid container spacing={0.3}> {/* Reduced spacing */}
-              {/* Base Price - Show for both */}
-              <Grid item xs={12}>
-                <Box sx={{ 
-                  p: 0.5, // Reduced padding
-                  display: 'flex', 
-                  justifyContent: 'space-between',
-                  borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                    Base Price
+
+          {/* Bowling */}
+          {bowlingStat && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, px: 1, py: 0.5, borderRadius: 1, backgroundColor: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.12)' }}>
+              <SportsHandballIcon sx={{ fontSize: '0.85rem', color: '#7c3aed', flexShrink: 0 }} />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase' }}>Bowling</Typography>
+                {Array.isArray(bowlingStat) ? (
+                  <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: '#6d28d9' }}>
+                    {bowlingStat[0]} wkts · {bowlingStat[1]} eco · {bowlingStat[2]} SR
                   </Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                    {formatToINR(player.basePrice || 50_00_000)}
+                ) : (
+                  <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#6d28d9' }}>{bowlingStat}</Typography>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          {/* Bid Banner */}
+          <Box sx={{ mt: 'auto' }}>
+            {highestBid ? (
+              <Box sx={{
+                px: 1.5, py: 1,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                border: '1.5px solid #f59e0b',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                boxShadow: '0 2px 8px rgba(245,158,11,0.2)',
+              }}>
+                <Box>
+                  <Typography sx={{ fontSize: '0.55rem', color: '#92400e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Current Bid
+                  </Typography>
+                  <Typography sx={{ fontSize: { xs: '1rem', sm: '1.2rem' }, fontWeight: 900, color: '#78350f', lineHeight: 1.1 }}>
+                    {formatToINR(highestBid.amount)}
                   </Typography>
                 </Box>
-              </Grid>
-              
-              {/* Only show detailed stats for Current Player */}
-              {!isNextPlayer && (
-                <>
-                  {/* Batting Stats Breakdown */}
-                  {player.battingStat && (
-                    <>
-                      {battingStats.runs !== null ? (
-                        <>
-                          <Grid item xs={6}>
-                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Runs</Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{battingStats.runs}</Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bat Avg</Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{battingStats.average}</Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bat SR</Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{battingStats.strikeRate}</Typography>
-                            </Box>
-                          </Grid>
-                        </>
-                      ) : (
-                        <Grid item xs={12}>
-                          <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
-                            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Batting</Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{player.battingStat}</Typography>
-                          </Box>
-                        </Grid>
-                      )}
-                    </>
-                  )}
-                  
-                  {/* Bowling Stats Breakdown */}
-                  {player.bowlingStat && player.bowlingStat !== 'NA' && (
-                    <>
-                      {bowlingStats.wickets !== null ? (
-                        <>
-                          <Grid item xs={6}>
-                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Wickets</Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{bowlingStats.wickets}</Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Economy</Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{bowlingStats.economy}</Typography>
-                            </Box>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between' }}>
-                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bowl SR</Typography>
-                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{bowlingStats.strikeRate}</Typography>
-                            </Box>
-                          </Grid>
-                        </>
-                      ) : (
-                        <Grid item xs={12}>
-                          <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
-                            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bowling</Typography>
-                            <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{player.bowlingStat}</Typography>
-                          </Box>
-                        </Grid>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-
-              {/* For next player, just show player type if not shown previously */}
-              {isNextPlayer && (
-                <Grid item xs={12}>
-                  <Box sx={{ 
-                    p: 0.5, // Reduced padding
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                  }}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                      Player Type
-                    </Typography>
-                    <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                      {player.playerType}
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-          
-          {/* Bid Information - Only for Current Player */}
-          {title === "Current Player" && highestBid && (
-            <Box sx={{
-              mt: 'auto',
-              p: 0.8, // Reduced padding
-              borderRadius: 1,
-              backgroundColor: 'rgba(245,158,11,0.1)',
-              border: '1px solid rgba(245,158,11,0.2)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <Box>
-                <Typography variant="caption" sx={{ 
-                  color: 'text.secondary',
-                  fontSize: '0.6rem', // Smaller font
-                  display: 'block'
-                }}>
-                  Highest Bid
-                </Typography>
-                <Typography variant="h6" sx={{ 
-                  fontWeight: 700, 
-                  color: '#92400e',
-                  fontSize: '1rem', // Smaller font
-                  lineHeight: 1.2
-                }}>
-                  {formatToINR(highestBid.amount)}
+                <Chip
+                  label={bidTeam?.name || 'Unknown'}
+                  size="small"
+                  sx={{
+                    height: 24, fontSize: '0.65rem', fontWeight: 700,
+                    backgroundColor: '#f59e0b', color: 'white',
+                    boxShadow: '0 2px 4px rgba(245,158,11,0.4)',
+                    maxWidth: 110,
+                  }}
+                />
+              </Box>
+            ) : (
+              <Box sx={{ px: 1.5, py: 1, borderRadius: 2, backgroundColor: 'rgba(0,0,0,0.03)', border: '1px dashed rgba(0,0,0,0.1)', textAlign: 'center' }}>
+                <Typography sx={{ fontSize: '0.7rem', color: 'text.secondary', fontStyle: 'italic' }}>
+                  No bids yet — opens at {formatToINR(player.basePrice)}
                 </Typography>
               </Box>
-              
-              <Chip
-                label={teams?.find(team => team.id === highestBid.teamId)?.name || 'Unknown'}
-                size="small"
-                sx={{
-                  height: 22, // Smaller height
-                  fontSize: '0.65rem', // Smaller font
-                  backgroundColor: 'rgba(245,158,11,0.9)',
-                  color: 'white',
-                  fontWeight: 600,
-                  '& .MuiChip-label': {
-                    px: 1
-                  }
-                }}
-              />
-            </Box>
-          )}
+            )}
+          </Box>
+        </Box>
+      </Box>
+    </Card>
+  );
+}
+
+function NextPlayerCard({ player }) {
+  if (!player) {
+    return (
+      <Card elevation={1} sx={{ borderRadius: 2, border: '1px dashed rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, minHeight: 80 }}>
+        <Typography variant="caption" color="text.secondary">No next player</Typography>
+      </Card>
+    );
+  }
+
+  const tier = TIER_STYLE[player.tier] || TIER_STYLE[3];
+  const typeColor = PLAYER_TYPE_COLOR[player.playerType?.toLowerCase()] || '#6b7280';
+  const battingStat = parseStat(player.battingStat);
+  const bowlingStat = parseStat(player.bowlingStat);
+
+  return (
+    <Card elevation={2} sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid rgba(190,24,93,0.12)', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <Box sx={{
+        px: 1.5, py: 0.6,
+        background: 'linear-gradient(135deg, #881337 0%, #be185d 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+          <AccessTimeIcon sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.9)' }} />
+          <Typography sx={{ fontWeight: 700, color: 'white', fontSize: '0.7rem', letterSpacing: '0.05em' }}>UP NEXT</Typography>
+        </Box>
+        <Chip
+          label={tier.label}
+          size="small"
+          sx={{ height: 16, fontSize: '0.55rem', backgroundColor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 700, border: '1px solid rgba(255,255,255,0.3)' }}
+        />
+      </Box>
+
+      {/* Body */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.2 }}>
+        <Avatar
+          src={player.photoUrl || ''}
+          alt={player.name}
+          variant="rounded"
+          sx={{
+            width: { xs: 52, sm: 64 }, height: { xs: 52, sm: 64 },
+            borderRadius: 1.5, flexShrink: 0,
+            border: '2px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            bgcolor: '#fce7f3', fontSize: '1rem', fontWeight: 700, color: '#be185d',
+          }}
+        >
+          {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+        </Avatar>
+
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: { xs: '0.8rem', sm: '0.9rem' }, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {player.name}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.3 }}>
+            <Chip
+              label={player.playerType}
+              size="small"
+              sx={{ height: 16, fontSize: '0.55rem', fontWeight: 700, backgroundColor: `${typeColor}20`, color: typeColor }}
+            />
+            {battingStat && !Array.isArray(battingStat) && (
+              <Chip label={battingStat} size="small" sx={{ height: 16, fontSize: '0.55rem', backgroundColor: 'rgba(37,99,235,0.08)', color: '#2563eb' }} />
+            )}
+            {bowlingStat && !Array.isArray(bowlingStat) && (
+              <Chip label={bowlingStat} size="small" sx={{ height: 16, fontSize: '0.55rem', backgroundColor: 'rgba(139,92,246,0.08)', color: '#7c3aed' }} />
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+          <Typography sx={{ fontSize: '0.55rem', color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase' }}>Base</Typography>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: '#be185d' }}>{formatToINR(player.basePrice)}</Typography>
         </Box>
       </Box>
     </Card>
@@ -519,126 +319,122 @@ function LiveView() {
   const { currentPlayer, nextPlayer, highestBid, notifications } = auctionState;
   const [viewMode, setViewMode] = useState('compact');
 
+  // Navbar height: 64px on sm+, 56px on xs
+  const navbarH = { xs: '56px', sm: '64px' };
+
   return (
-    <Box sx={{ width: '100%', px: { xs: 1, sm: 2, md: 3, lg: 4 } }}>
+    <Box sx={{
+      width: '100%',
+      height: { xs: 'auto', md: `calc(100vh - 64px)` },
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: '#f8fafc',
+      boxSizing: 'border-box',
+    }}>
       <ToastNotification notifications={notifications} />
 
-      {/* View Toggle */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 8,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 10,
-        }}
-      >
+      {/* Toggle bar — in the flow, not absolute */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        py: 0.8,
+        borderBottom: '1px solid rgba(0,0,0,0.05)',
+        backgroundColor: '#f8fafc',
+        flexShrink: 0,
+      }}>
         <ToggleButtonGroup
           value={viewMode}
           exclusive
-          onChange={(e, value) => value && setViewMode(value)}
-          color="primary"
+          onChange={(e, val) => val && setViewMode(val)}
           size="small"
           sx={{
             backgroundColor: 'white',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             borderRadius: 2,
             overflow: 'hidden',
             '& .MuiToggleButton-root': {
-              px: 1.5,
-              py: 0.7,
-              border: 'none',
-              '&.Mui-selected': {
-                backgroundColor: 'primary.main',
-                color: 'white',
-              },
-              '&:hover': {
-                backgroundColor: 'primary.light',
-                color: 'white',
-              },
+              px: 2, py: 0.5, border: 'none', gap: 0.5,
+              fontSize: '0.75rem', fontWeight: 600, color: 'text.secondary',
+              '&.Mui-selected': { backgroundColor: 'primary.main', color: 'white' },
             },
           }}
         >
-          <ToggleButton value="full" aria-label="Full View">
-            <ViewStreamIcon fontSize="small" sx={{ mr: 0.5 }} />
-            <Typography sx={{ fontSize: '0.75rem', display: { xs: 'none', sm: 'block' } }}></Typography>
+          <ToggleButton value="compact">
+            <ViewModuleIcon sx={{ fontSize: '1rem' }} />
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Players + Table</Box>
           </ToggleButton>
-          <ToggleButton value="compact" aria-label="Compact View">
-            <ViewModuleIcon fontSize="small" sx={{ mr: 0.5 }} />
-            <Typography sx={{ fontSize: '0.75rem', display: { xs: 'none', sm: 'block' } }}></Typography>
+          <ToggleButton value="full">
+            <ViewStreamIcon sx={{ fontSize: '1rem' }} />
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Table Only</Box>
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
+      {/* Content */}
       {viewMode === 'compact' ? (
-        <Box sx={{ 
-          display: 'flex', 
-          height: 'calc(100vh - 48px)', 
-          gap: 2,
-          pt: 3 // Reduced top padding further
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          flex: 1,
+          gap: { xs: 1.5, md: 2 },
+          p: { xs: 1, sm: 1.5, md: 2 },
+          overflow: { xs: 'visible', md: 'hidden' },
+          minHeight: 0,
         }}>
-          {/* Left 45%: Vertical Stack of Player Cards with 60-40 proportion */}
-          <Box sx={{ width: '45%', height: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}> {/* Reduced gap */}
-            {/* Current Player - 60% of the stack */}
-            <Box sx={{ flex: 6 }}>
-              <CompactPlayerCard
-                player={currentPlayer}
-                title="Current Player"
-                primaryColor="primary.main"
-                highestBid={highestBid}
-                teams={teams}
-                isNextPlayer={false}
-              />
+          {/* Left: Player Cards */}
+          <Box sx={{
+            width: { xs: '100%', md: '40%' },
+            display: 'flex',
+            flexDirection: 'column',
+            gap: { xs: 1.5, md: 1.5 },
+            flexShrink: 0,
+            height: { xs: 'auto', md: '100%' },
+            minHeight: 0,
+          }}>
+            {/* Current Player — 70% of left column on desktop */}
+            <Box sx={{ flex: { xs: 'none', md: '7 7 0%' }, minHeight: { xs: 300, sm: 360, md: 0 }, display: 'flex', flexDirection: 'column' }}>
+              <CurrentPlayerCard player={currentPlayer} highestBid={highestBid} teams={teams} />
             </Box>
-            {/* Next Player - 40% of the stack */}
-            <Box sx={{ flex: 4 }}>
-              <CompactPlayerCard
-                player={nextPlayer}
-                title="Next Player"
-                primaryColor="secondary.main"
-                isNextPlayer={true}
-              />
+            {/* Next Player — 30% of left column on desktop */}
+            <Box sx={{ flex: { xs: 'none', md: '3 3 0%' }, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+              <NextPlayerCard player={nextPlayer} />
             </Box>
           </Box>
 
-          {/* Right 55%: Team Table */}
+          {/* Right: Team Table */}
           <Box sx={{
-            height: 'calc(100vh - 48px - 24px)', // Adjusted height to match container height minus padding
-            width: '55%',
+            flex: 1,
+            minHeight: { xs: '60vh', md: 0 },
             overflow: 'auto',
             borderRadius: 2,
-            border: '1px solid rgba(0, 0, 0, 0.05)',
+            border: '1px solid rgba(0,0,0,0.06)',
             backgroundColor: 'white',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+            boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
           }}>
             <TeamTable teams={teams} />
           </Box>
         </Box>
       ) : (
-        <Box>
-          {/* Full view layout - Unchanged */}
-          <Box sx={{
-            height: 'calc(100vh - 48px)',
-            minHeight: '550px',
-            width: '100%',
-            overflow: 'auto',
-            pt: 3 // Reduced padding top
-          }}>
+        <Box sx={{
+          flex: 1,
+          overflow: 'auto',
+          p: { xs: 1, md: 2 },
+          minHeight: { xs: '70vh', md: 0 },
+        }}>
+          <Box sx={{ height: '100%', minHeight: 400, borderRadius: 2, border: '1px solid rgba(0,0,0,0.06)', backgroundColor: 'white', overflow: 'auto' }}>
             <TeamTable teams={teams} />
           </Box>
         </Box>
       )}
+
+      <style>{`
+        @keyframes livePulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.3; transform: scale(0.8); }
+        }
+      `}</style>
     </Box>
   );
 }
-
-// Add this keyframe animation to your CSS
-const cssKeyframes = `
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-`;
 
 export default LiveView;
