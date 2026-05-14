@@ -82,7 +82,7 @@ function LoginPage({ onSuccess }) {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}>
-            Nokia CNPL
+            CNDL
           </Typography>
           <Typography variant="body2" color="text.secondary" mt={0.5}>
             Sign in to access the auction controls
