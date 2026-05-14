@@ -13,8 +13,8 @@ function TeamTable({ teams }) {
 
   // Constants for budget calculations
   const MIN_PLAYERS_REQUIRED = 14;
-  const MIN_PLAYER_BASE_PRICE = 100000; // 1L
-  const MAX_TEAM_BUDGET = 400000000; // 40 Cr
+  const MIN_PLAYER_BASE_PRICE = 100000; // 1L (Tier-2 base)
+  const MAX_TEAM_BUDGET = 5000000; // 50L
 
   // Calculate maximum bid a team can place while maintaining ability to complete squad
   const calculateMaxBid = (team) => {
@@ -206,14 +206,16 @@ function TeamTable({ teams }) {
                       <AccountBalanceWalletIcon sx={{
                         fontSize: 14,
                         mr: 0.5,
-                        color: team.walletBalance > 100000000 ? '#16a34a' :
-                              team.walletBalance > 20000000 ? '#d97706' : '#64748b'
+                        color: team.walletBalance > 3000000 ? '#16a34a' :   // > 30L → green
+                              team.walletBalance > 500000 ? '#d97706' :      // > 5L → amber
+                              '#94a3b8'                                        // ≤ 5L → muted
                       }} />
                       <Typography variant="caption" sx={{
                         fontSize: { xs: '0.65rem', md: '0.8rem' },
                         fontWeight: 600,
-                        color: team.walletBalance > 100000000 ? '#16a34a' :
-                              team.walletBalance > 20000000 ? '#d97706' : '#64748b'
+                        color: team.walletBalance > 3000000 ? '#16a34a' :
+                              team.walletBalance > 500000 ? '#d97706' :
+                              '#94a3b8'
                       }}>
                         {formatToINR(team.walletBalance)}
                       </Typography>
@@ -224,14 +226,16 @@ function TeamTable({ teams }) {
                       <TrendingUpIcon sx={{
                         fontSize: 14,
                         mr: 0.5,
-                        color: maxBid > 50000000 ? '#0284c7' :
-                              maxBid > 10000000 ? '#d97706' : '#94a3b8'
+                        color: maxBid > 1000000 ? '#0284c7' :    // > 10L → blue
+                              maxBid > 100000 ? '#d97706' :        // > 1L → amber (can still bid)
+                              '#94a3b8'                             // ≤ 1L → muted
                       }} />
                       <Typography variant="caption" sx={{
                         fontSize: { xs: '0.6rem', md: '0.75rem' },
                         fontWeight: 600,
-                        color: maxBid > 50000000 ? '#0284c7' :
-                              maxBid > 10000000 ? '#d97706' : '#94a3b8'
+                        color: maxBid > 1000000 ? '#0284c7' :
+                              maxBid > 100000 ? '#d97706' :
+                              '#94a3b8'
                       }}>
                         Max: {formatToINR(maxBid)}
                       </Typography>
