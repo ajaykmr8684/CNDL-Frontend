@@ -20,10 +20,11 @@ const formatToINR = (amount) => {
 };
 
 const TIER_STYLE = {
-  1: { bg: 'rgba(16,185,129,0.12)', text: '#065f46', border: 'rgba(16,185,129,0.35)', label: 'Marquee' },
-  2: { bg: 'rgba(245,158,11,0.12)', text: '#92400e', border: 'rgba(245,158,11,0.35)', label: 'Tier 1' },
-  3: { bg: 'rgba(239,68,68,0.12)',  text: '#991b1b', border: 'rgba(239,68,68,0.35)',  label: 'Tier 2' },
+  'Marque': { bg: 'rgba(16,185,129,0.12)', text: '#065f46', border: 'rgba(16,185,129,0.35)', label: 'Marquee' },
+  'Tier-1': { bg: 'rgba(245,158,11,0.12)', text: '#92400e', border: 'rgba(245,158,11,0.35)', label: 'Tier 1' },
+  'Tier-2': { bg: 'rgba(239,68,68,0.12)',  text: '#991b1b', border: 'rgba(239,68,68,0.35)',  label: 'Tier 2' },
 };
+const DEFAULT_TIER = TIER_STYLE['Tier-2'];
 
 const PLAYER_TYPE_COLOR = {
   'batsman':       '#f59e0b',
@@ -51,7 +52,7 @@ function CurrentPlayerCard({ player, highestBid, teams }) {
     );
   }
 
-  const tier = TIER_STYLE[player.tier] || TIER_STYLE[3];
+  const tier = TIER_STYLE[player.tier] || DEFAULT_TIER;
   const typeColor = PLAYER_TYPE_COLOR[player.playerType?.toLowerCase()] || '#6b7280';
   const battingStat = parseStat(player.battingStat);
   const bowlingStat = parseStat(player.bowlingStat);
@@ -248,7 +249,7 @@ function NextPlayerCard({ player }) {
     );
   }
 
-  const tier = TIER_STYLE[player.tier] || TIER_STYLE[3];
+  const tier = TIER_STYLE[player.tier] || DEFAULT_TIER;
   const typeColor = PLAYER_TYPE_COLOR[player.playerType?.toLowerCase()] || '#6b7280';
   const battingStat = parseStat(player.battingStat);
   const bowlingStat = parseStat(player.bowlingStat);
