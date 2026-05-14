@@ -206,14 +206,14 @@ function TeamTable({ teams }) {
                       <AccountBalanceWalletIcon sx={{
                         fontSize: 14,
                         mr: 0.5,
-                        color: team.walletBalance > 100000000 ? "success.main" :
-                              team.walletBalance > 30000000 ? "warning.main" : "error.main"
+                        color: team.walletBalance > 100000000 ? '#16a34a' :
+                              team.walletBalance > 20000000 ? '#d97706' : '#64748b'
                       }} />
                       <Typography variant="caption" sx={{
                         fontSize: { xs: '0.65rem', md: '0.8rem' },
                         fontWeight: 600,
-                        color: team.walletBalance > 100000000 ? "success.main" :
-                              team.walletBalance > 30000000 ? "warning.main" : "error.main"
+                        color: team.walletBalance > 100000000 ? '#16a34a' :
+                              team.walletBalance > 20000000 ? '#d97706' : '#64748b'
                       }}>
                         {formatToINR(team.walletBalance)}
                       </Typography>
@@ -224,14 +224,14 @@ function TeamTable({ teams }) {
                       <TrendingUpIcon sx={{
                         fontSize: 14,
                         mr: 0.5,
-                        color: maxBid > 50000000 ? "info.main" : 
-                              maxBid > 20000000 ? "warning.main" : "error.main"
+                        color: maxBid > 50000000 ? '#0284c7' :
+                              maxBid > 10000000 ? '#d97706' : '#94a3b8'
                       }} />
                       <Typography variant="caption" sx={{
                         fontSize: { xs: '0.6rem', md: '0.75rem' },
                         fontWeight: 600,
-                        color: maxBid > 50000000 ? "info.main" : 
-                              maxBid > 20000000 ? "warning.main" : "error.main"
+                        color: maxBid > 50000000 ? '#0284c7' :
+                              maxBid > 10000000 ? '#d97706' : '#94a3b8'
                       }}>
                         Max: {formatToINR(maxBid)}
                       </Typography>
