@@ -13,7 +13,7 @@ function TeamTable({ teams }) {
 
   // Constants for budget calculations
   const MIN_PLAYERS_REQUIRED = 14;
-  const MIN_PLAYER_BASE_PRICE = 100000; 
+  const MIN_PLAYER_BASE_PRICE = 100000; // 1L
   const MAX_TEAM_BUDGET = 400000000; // 40 Cr
 
   // Calculate maximum bid a team can place while maintaining ability to complete squad
@@ -81,8 +81,16 @@ function TeamTable({ teams }) {
     }}>
       <Box sx={{
         display: 'grid',
-        gridTemplateColumns: `minmax(200px, auto) repeat(${maxPlayers}, 120px)`,
-        minWidth: 10 * 120 + 200,
+        gridTemplateColumns: {
+          xs: `minmax(130px, auto) repeat(${maxPlayers}, 72px)`,
+          sm: `minmax(160px, auto) repeat(${maxPlayers}, 90px)`,
+          md: `minmax(200px, auto) repeat(${maxPlayers}, 120px)`,
+        },
+        minWidth: {
+          xs: 130 + maxPlayers * 72,
+          sm: 160 + maxPlayers * 90,
+          md: 10 * 120 + 200,
+        },
         flexGrow: 1
       }}>
         {/* Top-left corner cell */}
@@ -98,11 +106,11 @@ function TeamTable({ teams }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          height: '56px',
+          height: { xs: '36px', sm: '44px', md: '56px' },
           boxSizing: 'border-box'
         }}>
           <Typography variant="subtitle2" sx={{
-            fontSize: '0.875rem',
+            fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.875rem' },
             fontWeight: 'bold',
             color: '#2c3e50'
           }}>
@@ -116,15 +124,15 @@ function TeamTable({ teams }) {
             backgroundColor: '#f0f4f8',
             borderBottom: '1px solid #e0e7ef',
             borderRight: index < maxPlayers - 1 ? '1px solid #e0e7ef' : 'none',
-            p: 1.5,
+            p: { xs: 0.5, md: 1.5 },
             position: 'sticky',
             top: 0,
             zIndex: 2,
-            height: '56px',
+            height: { xs: '36px', sm: '44px', md: '56px' },
             boxSizing: 'border-box'
           }}>
             <Typography variant="subtitle2" fontWeight="bold" sx={{
-              fontSize: '0.75rem',
+              fontSize: { xs: '0.6rem', sm: '0.65rem', md: '0.75rem' },
               textAlign: 'center',
               color: '#2c3e50'
             }}>
@@ -148,44 +156,46 @@ function TeamTable({ teams }) {
                 borderBottom: '1px solid #e0e7ef',
                 borderRight: '1px solid #e0e7ef',
                 backgroundColor: evenRow ? 'rgba(236, 240, 245, 0.7)' : '#fff',
-                p: 1.5,
+                p: { xs: 0.75, sm: 1, md: 1.5 },
                 position: 'sticky',
                 left: 0,
                 zIndex: 1,
                 display: 'flex',
                 alignItems: 'center',
-                height: '100px', // Increased height to accommodate max bid info
+                height: { xs: '72px', sm: '86px', md: '100px' },
                 boxSizing: 'border-box'
               }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, md: 1.5 } }}>
                   <Avatar sx={{
                     bgcolor: 'primary.main',
-                    width: 36,
-                    height: 36,
-                    fontSize: '1rem',
-                    fontWeight: 'bold'
+                    width: { xs: 24, sm: 30, md: 36 },
+                    height: { xs: 24, sm: 30, md: 36 },
+                    fontSize: { xs: '0.7rem', md: '1rem' },
+                    fontWeight: 'bold',
+                    display: { xs: 'none', sm: 'flex' },
                   }}>
                     {team.name.charAt(0)}
                   </Avatar>
                   <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <Tooltip title={team.name} placement="top">
                       <Typography variant="subtitle1" fontWeight="600" sx={{
-                        fontSize: '0.95rem',
+                      fontSize: { xs: '0.7rem', sm: '0.82rem', md: '0.95rem' },
                         color: '#1a365d',
                         lineHeight: 1.3,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        maxWidth: 150
+                        maxWidth: { xs: 90, sm: 120, md: 150 }
                       }}>
                         {team.name}
                       </Typography>
                     </Tooltip>
                     <Tooltip title={team.owners?.[0]?.name || "Unknown Owner"} placement="top">
                       <Typography variant="caption" sx={{
-                        fontSize: '0.75rem',
+                        fontSize: { xs: '0.6rem', md: '0.75rem' },
                         color: '#4a5568',
-                        lineHeight: 1.2
+                        lineHeight: 1.2,
+                        display: { xs: 'none', sm: 'block' },
                       }}>
                         {team.owners?.[0]?.name || "Unknown"}
                       </Typography>
@@ -200,7 +210,7 @@ function TeamTable({ teams }) {
                               team.walletBalance > 30000000 ? "warning.main" : "error.main"
                       }} />
                       <Typography variant="caption" sx={{
-                        fontSize: '0.8rem',
+                        fontSize: { xs: '0.65rem', md: '0.8rem' },
                         fontWeight: 600,
                         color: team.walletBalance > 100000000 ? "success.main" :
                               team.walletBalance > 30000000 ? "warning.main" : "error.main"
@@ -218,7 +228,7 @@ function TeamTable({ teams }) {
                               maxBid > 20000000 ? "warning.main" : "error.main"
                       }} />
                       <Typography variant="caption" sx={{
-                        fontSize: '0.75rem',
+                        fontSize: { xs: '0.6rem', md: '0.75rem' },
                         fontWeight: 600,
                         color: maxBid > 50000000 ? "info.main" : 
                               maxBid > 20000000 ? "warning.main" : "error.main"
@@ -230,9 +240,10 @@ function TeamTable({ teams }) {
                     {/* Squad Status */}
                     {currentSquadSize < MIN_PLAYERS_REQUIRED && (
                       <Typography variant="caption" sx={{
-                        fontSize: '0.7rem',
+                        fontSize: { xs: '0.55rem', md: '0.7rem' },
                         color: 'text.secondary',
-                        mt: 0.25
+                        mt: 0.25,
+                        display: { xs: 'none', sm: 'block' },
                       }}>
                         Need {remainingPlayersNeeded} more
                       </Typography>
@@ -247,8 +258,8 @@ function TeamTable({ teams }) {
                   borderBottom: '1px solid #e0e7ef',
                   borderRight: playerIndex < maxPlayers - 1 ? '1px solid #e0e7ef' : 'none',
                   backgroundColor: evenRow ? 'rgba(236, 240, 245, 0.3)' : '#fff',
-                  p: 1.25,
-                  height: '100px', // Matched with team row height
+                  p: { xs: 0.5, md: 1.25 },
+                  height: { xs: '72px', sm: '86px', md: '100px' },
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -264,8 +275,8 @@ function TeamTable({ teams }) {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            minWidth: 20,
-                            height: 20,
+                            minWidth: { xs: 16, md: 20 },
+                            height: { xs: 16, md: 20 },
                             borderRadius: '50%',
                             backgroundColor: getPlayerTypeColor(player.playerType),
                             boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
@@ -273,7 +284,7 @@ function TeamTable({ teams }) {
                             {getPlayerTypeIcon(player.playerType)}
                           </Box>
                           <Typography variant="body2" sx={{
-                            fontSize: '0.8rem',
+                            fontSize: { xs: '0.65rem', sm: '0.72rem', md: '0.8rem' },
                             fontWeight: 500,
                             color: '#2c3e50',
                             whiteSpace: 'nowrap',
@@ -285,7 +296,7 @@ function TeamTable({ teams }) {
                           </Typography>
                         </Box>
                         <Typography variant="caption" sx={{
-                          fontSize: '0.75rem',
+                          fontSize: { xs: '0.6rem', md: '0.75rem' },
                           color: '#4a5568',
                           fontWeight: 600,
                           textAlign: 'right',
