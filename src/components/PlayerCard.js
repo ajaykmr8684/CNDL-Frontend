@@ -49,13 +49,19 @@ function PlayerCard({
               <Avatar 
                 src={player.photoUrl}
                 alt={player.name}
+                onError={(e) => { e.target.src = ''; }}
                 sx={{ 
                   width: 80, 
                   height: 80, 
                   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                  border: '3px solid white'
+                  border: '3px solid white',
+                  bgcolor: primaryColor,
+                  fontSize: '1.8rem',
+                  fontWeight: 'bold',
                 }}
-              />
+              >
+                {player.name.split(' ').map(n => n[0]).join('')}
+              </Avatar>
             ) : (
               <Avatar sx={{ 
                 width: 80, 
