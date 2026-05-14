@@ -84,7 +84,7 @@ function CurrentPlayerCard({ player, highestBid, teams }) {
           icon={<EmojiEventsIcon style={{ fontSize: '0.7rem', color: tier.text }} />}
           label={tier.label}
           size="small"
-          sx={{ height: 20, fontSize: '0.6rem', backgroundColor: tier.bg, color: tier.text, border: `1px solid ${tier.border}`, fontWeight: 700 }}
+          sx={{ height: 22, fontSize: '0.65rem', backgroundColor: 'rgba(255,255,255,0.92)', color: tier.text, border: `1.5px solid ${tier.border}`, fontWeight: 800 }}
         />
       </Box>
 
@@ -92,25 +92,27 @@ function CurrentPlayerCard({ player, highestBid, teams }) {
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Photo + name */}
         <Box sx={{
-          width: { xs: '38%', sm: '40%' },
+          width: { xs: '40%', sm: '42%', md: '44%' },
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           background: 'linear-gradient(160deg, #f8fafc 0%, #eff6ff 100%)',
           borderRight: '1px solid rgba(0,0,0,0.05)',
           p: { xs: 1, sm: 1.5 },
-          gap: 0.8,
+          gap: 1,
         }}>
           <Avatar
             src={player.photoUrl || ''}
             alt={player.name}
             variant="rounded"
             sx={{
-              width: { xs: 88, sm: 120, md: 150, lg: 190 },
-              height: { xs: 88, sm: 120, md: 150, lg: 190 },
-              borderRadius: 2,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+              width: '85%',
+              height: 'auto',
+              aspectRatio: '1 / 1',
+              maxWidth: { xs: 140, sm: 200, md: 260, lg: 320 },
+              borderRadius: 2.5,
+              boxShadow: '0 6px 24px rgba(0,0,0,0.22)',
               border: '3px solid white',
               bgcolor: '#e0e7ff',
-              fontSize: { xs: '1.6rem', md: '2.5rem' },
+              fontSize: { xs: '2rem', md: '3.5rem' },
               fontWeight: 700,
               color: '#3730a3',
             }}
