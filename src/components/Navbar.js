@@ -57,7 +57,7 @@ function Navbar() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}>
-              CNDL
+              Cobra League
             </Typography>
           </Box>
 
