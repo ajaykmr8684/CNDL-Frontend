@@ -61,21 +61,31 @@ function CompactPlayerCard({ player, title, primaryColor, highestBid, teams, isN
   const parseBattingStats = (battingStat) => {
     if (!battingStat) return { runs: '-', average: '-', strikeRate: '-' };
     const parts = battingStat.split(',');
-    return {
-      runs: parts[0] || '-',
-      average: parts[1] || '-',
-      strikeRate: parts[2] || '-'
-    };
+    // If it looks like a numeric stat string (has numbers), parse it
+    if (parts.length > 1 || !isNaN(parts[0])) {
+      return {
+        runs: parts[0] || '-',
+        average: parts[1] || '-',
+        strikeRate: parts[2] || '-'
+      };
+    }
+    // Otherwise it's a style string like "Right-Handed" — don't parse as stats
+    return { runs: null, average: null, strikeRate: null };
   };
   
   const parseBowlingStats = (bowlingStat) => {
-    if (!bowlingStat) return { wickets: '-', economy: '-', strikeRate: '-' };
+    if (!bowlingStat || bowlingStat === 'NA') return { wickets: '-', economy: '-', strikeRate: '-' };
     const parts = bowlingStat.split(',');
-    return {
-      wickets: parts[0] || '-',
-      economy: parts[1] || '-',
-      strikeRate: parts[2] || '-' 
-    };
+    // If it looks like a numeric stat string (has numbers), parse it
+    if (parts.length > 1 || !isNaN(parts[0])) {
+      return {
+        wickets: parts[0] || '-',
+        economy: parts[1] || '-',
+        strikeRate: parts[2] || '-'
+      };
+    }
+    // Otherwise it's a style string like "Right-Arm-Medium" — don't parse as stats
+    return { wickets: null, economy: null, strikeRate: null };
   };
   
   const battingStats = parseBattingStats(player.battingStat);
@@ -362,101 +372,70 @@ function CompactPlayerCard({ player, title, primaryColor, highestBid, teams, isN
                   {/* Batting Stats Breakdown */}
                   {player.battingStat && (
                     <>
-                      <Grid item xs={6}>
-                        <Box sx={{ 
-                          p: 0.5, // Reduced padding
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                        }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                            Runs
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                            {battingStats.runs}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Box sx={{ 
-                          p: 0.5, // Reduced padding
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                        }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                            Bat Avg
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                            {battingStats.average}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Box sx={{ 
-                          p: 0.5, // Reduced padding
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                        }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                            Bat SR
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                            {battingStats.strikeRate}
-                          </Typography>
-                        </Box>
-                      </Grid>
+                      {battingStats.runs !== null ? (
+                        <>
+                          <Grid item xs={6}>
+                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Runs</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{battingStats.runs}</Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bat Avg</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{battingStats.average}</Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bat SR</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{battingStats.strikeRate}</Typography>
+                            </Box>
+                          </Grid>
+                        </>
+                      ) : (
+                        <Grid item xs={12}>
+                          <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Batting</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{player.battingStat}</Typography>
+                          </Box>
+                        </Grid>
+                      )}
                     </>
                   )}
                   
                   {/* Bowling Stats Breakdown */}
-                  {player.bowlingStat && (
+                  {player.bowlingStat && player.bowlingStat !== 'NA' && (
                     <>
-                      <Grid item xs={6}>
-                        <Box sx={{ 
-                          p: 0.5, // Reduced padding
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                        }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                            Wickets
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                            {bowlingStats.wickets}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Box sx={{ 
-                          p: 0.5, // Reduced padding 
-                          display: 'flex', 
-                          justifyContent: 'space-between',
-                          borderBottom: '1px dashed rgba(0,0,0,0.1)'
-                        }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                            Economy
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                            {bowlingStats.economy}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Box sx={{ 
-                          p: 0.5, // Reduced padding
-                          display: 'flex', 
-                          justifyContent: 'space-between'
-                        }}>
-                          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
-                            Bowl SR
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>
-                            {bowlingStats.strikeRate}
-                          </Typography>
-                        </Box>
-                      </Grid>
+                      {bowlingStats.wickets !== null ? (
+                        <>
+                          <Grid item xs={6}>
+                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Wickets</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{bowlingStats.wickets}</Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Economy</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{bowlingStats.economy}</Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between' }}>
+                              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bowl SR</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{bowlingStats.strikeRate}</Typography>
+                            </Box>
+                          </Grid>
+                        </>
+                      ) : (
+                        <Grid item xs={12}>
+                          <Box sx={{ p: 0.5, display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed rgba(0,0,0,0.1)' }}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>Bowling</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.65rem' }}>{player.bowlingStat}</Typography>
+                          </Box>
+                        </Grid>
+                      )}
                     </>
                   )}
                 </>
