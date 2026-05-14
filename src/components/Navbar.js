@@ -52,7 +52,7 @@ function Navbar() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}>
-              Nokia CNPL
+              CNDL
             </Typography>
           </Box>
           
