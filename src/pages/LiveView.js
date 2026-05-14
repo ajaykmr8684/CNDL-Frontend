@@ -116,6 +116,7 @@ function CurrentPlayerCard({ player, highestBid, teams }) {
               fontSize: { xs: '2rem', md: '3.5rem' },
               fontWeight: 700,
               color: '#3730a3',
+              '& img': { objectFit: 'cover', objectPosition: 'top center' },
             }}
           >
             {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -283,8 +284,7 @@ function NextPlayerCard({ player }) {
             width: { xs: 52, sm: 64 }, height: { xs: 52, sm: 64 },
             borderRadius: 1.5, flexShrink: 0,
             border: '2px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-            bgcolor: '#fce7f3', fontSize: '1rem', fontWeight: 700, color: '#be185d',
-          }}
+            bgcolor: '#fce7f3', fontSize: '1rem', fontWeight: 700, color: '#be185d',            '& img': { objectFit: 'cover', objectPosition: 'top center' },          }}
         >
           {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
         </Avatar>
