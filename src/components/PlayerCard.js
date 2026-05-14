@@ -16,7 +16,7 @@ function PlayerCard({
 }) {
   return (
     <Paper elevation={0} sx={{ 
-      p: 3, 
+      p: { xs: 2, sm: 3 }, 
       height: '100%', 
       borderRadius: 2, 
       border: '1px solid rgba(0, 0, 0, 0.08)',
