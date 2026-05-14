@@ -59,7 +59,7 @@ function CurrentPlayerCard({ player, highestBid, teams }) {
 
   return (
     <Card elevation={4} sx={{
-      height: '100%',
+      height: { xs: 'auto', md: '100%' },
       borderRadius: 3,
       overflow: 'hidden',
       display: 'flex',
@@ -394,7 +394,7 @@ function LiveView() {
             minHeight: 0,
           }}>
             {/* Current Player — 70% of left column on desktop */}
-            <Box sx={{ flex: { xs: 'none', md: '7 7 0%' }, minHeight: { xs: 300, sm: 360, md: 0 }, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flex: { xs: 'none', md: '7 7 0%' }, minHeight: { md: 0 }, display: 'flex', flexDirection: 'column' }}>
               <CurrentPlayerCard player={currentPlayer} highestBid={highestBid} teams={teams} />
             </Box>
             {/* Next Player — 30% of left column on desktop */}
