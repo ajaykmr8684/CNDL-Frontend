@@ -92,7 +92,7 @@ function CurrentPlayerCard({ player, highestBid, teams }) {
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Photo + name */}
         <Box sx={{
-          width: { xs: '40%', sm: '42%', md: '44%' },
+          width: { xs: '40%', sm: '42%', md: '50%', lg: '52%' },
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           background: 'linear-gradient(160deg, #f8fafc 0%, #eff6ff 100%)',
           borderRight: '1px solid rgba(0,0,0,0.05)',
@@ -104,10 +104,10 @@ function CurrentPlayerCard({ player, highestBid, teams }) {
             alt={player.name}
             variant="rounded"
             sx={{
-              width: '85%',
+              width: '90%',
               height: 'auto',
               aspectRatio: '1 / 1',
-              maxWidth: { xs: 140, sm: 200, md: 260, lg: 320 },
+              maxWidth: { xs: 140, sm: 200, md: 340, lg: 420 },
               borderRadius: 2.5,
               boxShadow: '0 6px 24px rgba(0,0,0,0.22)',
               border: '3px solid white',
