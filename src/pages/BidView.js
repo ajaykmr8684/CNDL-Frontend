@@ -11,7 +11,6 @@ import PageHeader from '../components/PageHeader';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
-
 function BidView() {
   const { auctionState, teams, placeBid, loading } = useAuction();
   const { currentPlayer, highestBid, basePrice, stepUpAmount } = auctionState;
@@ -26,7 +25,7 @@ function BidView() {
 
   // Constants for budget calculations
   const MIN_PLAYERS_REQUIRED = 14;
-  const MIN_PLAYER_BASE_PRICE = 100000; 
+  const MIN_PLAYER_BASE_PRICE = 100000; // Tier-2 base price — reserve budget for remaining players
   const MAX_TEAM_BUDGET = 400000000; // 40 Cr
 
   // Memoized currency formatter
@@ -193,8 +192,10 @@ function BidView() {
                 mt: 2,
                 mb: 2,
                 display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: 1,
                 borderRadius: '8px',
                 padding: '8px 16px',
                 backgroundColor: '#f0f7ff',
@@ -202,12 +203,12 @@ function BidView() {
                 border: '1px solid #e0e7ff',
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                 <Chip 
                   label={bidInfo.tier || currentPlayer.tier}
                   color="primary"
                   size="small"
-                  sx={{ mr: 2, fontWeight: 'bold' }}
+                  sx={{ fontWeight: 'bold' }}
                 />
                 <Typography variant="body2" color="text.secondary">
                   Base: {formatCurrency(bidInfo.basePrice || basePrice)} | Step: {formatCurrency(bidInfo.stepUpAmount || stepUpAmount)}
@@ -223,9 +224,9 @@ function BidView() {
           )}
 
           {/* Main Content */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
             {/* Player Card */}
-            <Paper elevation={2} sx={{ width: '40%', p: 2, borderRadius: 2 }}>
+            <Paper elevation={2} sx={{ width: { xs: '100%', md: '40%' }, p: 2, borderRadius: 2 }}>
               <PlayerCard
                 title="Current Player"
                 player={currentPlayer}
@@ -239,7 +240,7 @@ function BidView() {
             </Paper>
 
             {/* Team Bid Buttons */}
-            <Paper elevation={2} sx={{ width: '60%', p: 2, borderRadius: 2 }}>
+            <Paper elevation={2} sx={{ width: { xs: '100%', md: '60%' }, p: 2, borderRadius: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <LocalAtmIcon color="primary" fontSize="small" sx={{ mr: 1 }} />
                 <Typography variant="subtitle1" fontWeight="medium">
