@@ -20,7 +20,6 @@ import {
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
-
 const PlayerManagementDialog = ({ open, onClose, teams, onPlayerUpdate }) => {
   const [players, setPlayers] = useState([]);
   const [filteredPlayers, setFilteredPlayers] = useState([]);
@@ -145,7 +144,7 @@ const PlayerManagementDialog = ({ open, onClose, teams, onPlayerUpdate }) => {
         photoUrl: editForm.photoUrl
       };
 
-      const response = await fetch(`/api/admin/players/${editingPlayer.id}`, {
+      const response = await fetch(`${API_URL}/api/admin/players/${editingPlayer.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
