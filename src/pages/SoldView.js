@@ -29,6 +29,7 @@ function SoldView() {
   const [isSelling, setIsSelling] = useState(false);
   const [isUnselling, setIsUnselling] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [displayBid, setDisplayBid] = useState(highestBid);
   
   // States for edit functionality
@@ -156,6 +157,118 @@ const handlePlayerUpdate = () => {
     setTimeout(() => {
       setIsUnselling(false);
     }, 1000);
+  };
+
+  const handleExportExcel = async () => {
+    setIsExportingExcel(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auction/export-players`);
+      if (!response.ok) throw new Error('Failed to fetch player data');
+      const players = await response.json();
+
+      // ── Sheet 1: Team Summary ─────────────────────────────────────────────
+      // Build a map teamId -> team info
+      const teamMap = {};
+      teams.forEach(t => { teamMap[t.id] = t; });
+
+      // Group sold players by team (exclude default/pre-assigned ones with soldAmount===0)
+      const byTeam = {};
+      teams.forEach(t => { byTeam[t.id] = []; });
+      players.forEach(p => {
+        if (p.sold && p.soldToTeamId && p.soldAmount > 0) {
+          if (!byTeam[p.soldToTeamId]) byTeam[p.soldToTeamId] = [];
+          byTeam[p.soldToTeamId].push(p);
+        }
+      });
+
+      const summaryRows = [['Team', 'Owner', 'Players Bought', 'Total Spent (₹)', 'Wallet Remaining (₹)']];
+      teams.forEach(t => {
+        const tPlayers = byTeam[t.id] || [];
+        const spent = tPlayers.reduce((s, p) => s + (p.soldAmount || 0), 0);
+        summaryRows.push([
+          t.name,
+          t.owners?.[0]?.name || 'Unknown',
+          tPlayers.length,
+          spent,
+          t.walletBalance
+        ]);
+      });
+
+      // ── Sheet 2: Player Details ────────────────────────────────────────────
+      const soldPlayers = players
+        .filter(p => p.sold && p.soldAmount > 0)
+        .sort((a, b) => (a.soldToTeamId || 0) - (b.soldToTeamId || 0));
+
+      const unsoldList = players.filter(p => !p.sold || p.soldAmount === 0 || p.soldAmount === null);
+
+      const detailHeaders = ['#', 'Player Name', 'Type', 'Tier', 'Team', 'Sold Amount (₹)', 'Batting', 'Bowling'];
+      const detailRows = [detailHeaders];
+      soldPlayers.forEach((p, i) => {
+        detailRows.push([
+          i + 1,
+          p.name,
+          p.playerType,
+          p.tier,
+          teamMap[p.soldToTeamId]?.name || 'Unknown',
+          p.soldAmount,
+          p.battingStat || '',
+          p.bowlingStat || ''
+        ]);
+      });
+
+      // ── Sheet 3: Unsold Players ───────────────────────────────────────────
+      const unsoldHeaders = ['#', 'Player Name', 'Type', 'Tier', 'Batting', 'Bowling'];
+      const unsoldRows = [unsoldHeaders];
+      unsoldList.forEach((p, i) => {
+        unsoldRows.push([i + 1, p.name, p.playerType, p.tier, p.battingStat || '', p.bowlingStat || '']);
+      });
+
+      // ── Sheet 4: Per-Team rosters ─────────────────────────────────────────
+      const rosterRows = [['Team', 'Player Name', 'Type', 'Tier', 'Sold Amount (₹)', 'Batting', 'Bowling']];
+      teams.forEach(t => {
+        const tPlayers = byTeam[t.id] || [];
+        if (tPlayers.length === 0) {
+          rosterRows.push([t.name, '— No players —', '', '', '', '', '']);
+        } else {
+          tPlayers.forEach(p => {
+            rosterRows.push([t.name, p.name, p.playerType, p.tier, p.soldAmount, p.battingStat || '', p.bowlingStat || '']);
+          });
+        }
+        rosterRows.push(['', '', '', '', '', '', '']); // blank separator
+      });
+
+      // ── Build workbook ────────────────────────────────────────────────────
+      const XLSX = window.XLSX;
+      if (!XLSX) throw new Error('XLSX library not loaded');
+
+      const wb = XLSX.utils.book_new();
+
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+      wsSummary['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 16 }, { wch: 18 }, { wch: 22 }];
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Team Summary');
+
+      const wsDetail = XLSX.utils.aoa_to_sheet(detailRows);
+      wsDetail['!cols'] = [{ wch: 4 }, { wch: 22 }, { wch: 14 }, { wch: 10 }, { wch: 26 }, { wch: 16 }, { wch: 20 }, { wch: 22 }];
+      XLSX.utils.book_append_sheet(wb, wsDetail, 'Sold Players');
+
+      const wsUnsold = XLSX.utils.aoa_to_sheet(unsoldRows);
+      wsUnsold['!cols'] = [{ wch: 4 }, { wch: 22 }, { wch: 14 }, { wch: 10 }, { wch: 20 }, { wch: 22 }];
+      XLSX.utils.book_append_sheet(wb, wsUnsold, 'Unsold Players');
+
+      const wsRoster = XLSX.utils.aoa_to_sheet(rosterRows);
+      wsRoster['!cols'] = [{ wch: 26 }, { wch: 22 }, { wch: 14 }, { wch: 10 }, { wch: 16 }, { wch: 20 }, { wch: 22 }];
+      XLSX.utils.book_append_sheet(wb, wsRoster, 'Team Rosters');
+
+      const date = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wb, `cndl-auction-results-${date}.xlsx`);
+
+      setMessage('Excel exported successfully!');
+    } catch (err) {
+      console.error('Error exporting Excel:', err);
+      setError('Failed to export Excel. Please try again.');
+    } finally {
+      setIsExportingExcel(false);
+    }
   };
 
   const handleDownload = async () => {
@@ -343,6 +456,19 @@ const handlePlayerUpdate = () => {
                 </Button>
               </>
               )}
+              <Button
+                variant="contained"
+                onClick={handleExportExcel}
+                startIcon={<DownloadIcon />}
+                disabled={isExportingExcel}
+                sx={{
+                  height: '42px',
+                  backgroundImage: 'linear-gradient(to right, #b45309, #f59e0b)',
+                  '&:hover': { backgroundImage: 'linear-gradient(to right, #92400e, #d97706)' },
+                }}
+              >
+                {isExportingExcel ? 'Exporting...' : 'Export Excel'}
+              </Button>
               <Button
                 variant="contained"
                 onClick={handleDownload}
