@@ -224,17 +224,26 @@ const handlePlayerUpdate = () => {
       });
 
       // ── Sheet 4: Per-Team rosters ─────────────────────────────────────────
-      const rosterRows = [['Team', 'Player Name', 'Type', 'Tier', 'Sold Amount (₹)', 'Batting', 'Bowling']];
-      teams.forEach(t => {
+      const rosterRows = [];
+      teams.forEach((t, idx) => {
         const tPlayers = byTeam[t.id] || [];
+        const owner = t.owners?.[0]?.name || 'Unknown';
+        const spent = tPlayers.reduce((s, p) => s + (p.soldAmount || 0), 0);
+
+        // Team header row
+        rosterRows.push([`${t.name}  |  Owner: ${owner}  |  Players: ${tPlayers.length}  |  Spent: ₹${spent.toLocaleString('en-IN')}`, '', '', '', '', '']);
+        // Column sub-header
+        rosterRows.push(['#', 'Player Name', 'Type', 'Tier', 'Sold Amount (₹)', 'Batting', 'Bowling']);
+
         if (tPlayers.length === 0) {
-          rosterRows.push([t.name, '— No players —', '', '', '', '', '']);
+          rosterRows.push(['—', 'No players bought', '', '', '', '', '']);
         } else {
-          tPlayers.forEach(p => {
-            rosterRows.push([t.name, p.name, p.playerType, p.tier, p.soldAmount, p.battingStat || '', p.bowlingStat || '']);
+          tPlayers.forEach((p, i) => {
+            rosterRows.push([i + 1, p.name, p.playerType, p.tier, p.soldAmount, p.battingStat || '', p.bowlingStat || '']);
           });
         }
-        rosterRows.push(['', '', '', '', '', '', '']); // blank separator
+        // blank separator between teams (skip after last)
+        if (idx < teams.length - 1) rosterRows.push(['', '', '', '', '', '', '']);
       });
 
       // ── Build workbook ────────────────────────────────────────────────────
