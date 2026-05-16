@@ -17,10 +17,11 @@ function TeamTable({ teams }) {
   const MAX_TEAM_BUDGET = 5000000; // 50L
 
   // Calculate maximum bid a team can place while maintaining ability to complete squad
+  // Only counts actually auctioned players (soldAmount > 0), not pre-assigned default owners
   const calculateMaxBid = (team) => {
     if (!team || !team.players) return 0;
 
-    const currentSquadSize = team.players.length;
+    const currentSquadSize = team.players.filter(p => p.soldAmount > 0).length;
     const remainingPlayersNeeded = MIN_PLAYERS_REQUIRED - currentSquadSize;
     
     // If team already has 11+ players, they can bid their full wallet balance
@@ -37,31 +38,29 @@ function TeamTable({ teams }) {
     return Math.max(0, maxBid);
   };
 
-  // Modified function to ensure newest players are always in the first column
+  // Default owner players (soldAmount === 0) always appear first;
+  // then actually auctioned players (soldAmount > 0), newest first.
   const processTeamPlayers = (team) => {
     if (!team.players || team.players.length === 0) return Array(maxPlayers).fill(null);
     
-    // Create a result array filled with nulls
     const result = Array(maxPlayers).fill(null);
     
-    // Sort players by newness
-    // First, separate retained players (R) from newly bought players
-    const retainedPlayers = team.players.filter(player => !player.soldAmount || player.soldAmount === 'R');
-    const boughtPlayers = team.players.filter(player => player.soldAmount && player.soldAmount !== 'R');
+    // Default/owner players pre-assigned before auction
+    const defaultPlayers = team.players.filter(player => player.soldAmount === 0);
+    // Players actually bought in the auction
+    const auctionedPlayers = team.players.filter(player => player.soldAmount > 0);
     
-    // Reverse bought players to get newest first
-    const newestBoughtPlayersFirst = [...boughtPlayers].reverse();
+    // Newest auctioned players first
+    const newestFirst = [...auctionedPlayers].reverse();
     
-    // First, place all the bought players from left to right
-    for (let i = 0; i < newestBoughtPlayersFirst.length && i < maxPlayers; i++) {
-      result[i] = newestBoughtPlayersFirst[i];
+    // Place default/owner players in the first slot(s)
+    for (let i = 0; i < defaultPlayers.length && i < maxPlayers; i++) {
+      result[i] = defaultPlayers[i];
     }
     
-    // Then, place retained players in remaining slots
-    let nextAvailableSlot = newestBoughtPlayersFirst.length;
-    for (let i = 0; i < retainedPlayers.length && nextAvailableSlot < maxPlayers; i++) {
-      result[nextAvailableSlot] = retainedPlayers[i];
-      nextAvailableSlot++;
+    // Place auctioned players after the default slots
+    for (let i = 0; i < newestFirst.length && (defaultPlayers.length + i) < maxPlayers; i++) {
+      result[defaultPlayers.length + i] = newestFirst[i];
     }
     
     return result;
@@ -146,8 +145,9 @@ function TeamTable({ teams }) {
           const evenRow = teamIndex % 2 === 0;
           const processedPlayers = processTeamPlayers(team);
           const maxBid = calculateMaxBid(team);
-          const currentSquadSize = team.players?.length || 0;
-          const remainingPlayersNeeded = Math.max(0, MIN_PLAYERS_REQUIRED - currentSquadSize);
+          // Only count actually auctioned players toward the squad requirement
+          const auctionedCount = team.players?.filter(p => p.soldAmount > 0).length || 0;
+          const remainingPlayersNeeded = Math.max(0, MIN_PLAYERS_REQUIRED - auctionedCount);
 
           return (
             <React.Fragment key={team.id}>
@@ -242,7 +242,7 @@ function TeamTable({ teams }) {
                     </Box>
 
                     {/* Squad Status */}
-                    {currentSquadSize < MIN_PLAYERS_REQUIRED && (
+                    {auctionedCount < MIN_PLAYERS_REQUIRED && (
                       <Typography variant="caption" sx={{
                         fontSize: { xs: '0.55rem', md: '0.7rem' },
                         color: 'text.secondary',
